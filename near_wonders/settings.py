@@ -75,8 +75,12 @@ WSGI_APPLICATION = 'near_wonders.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'near_wonders_db',
+        'USER': 'near_wonders_user',
+        'PASSWORD': 'near_wonders_pass',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 
