@@ -1,0 +1,117 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyo
+*.sqlite3
+
+# If you are using SQLite database files
+db.sqlite3
+
+# Django migrations
+*/migrations/*
+
+# Private stuff:
+.DS_Store
+.env
+.vscode/
+.idea/
+
+# Virtual environment
+.venv/
+venv/
+
+# Local development environment settings
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrap:
+*.swp
+*~
+
+# Other stuff:
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+coverage/
+*.coverage
+
+# Docker
+docker-compose.override.yml
+docker-compose.yml
+Dockerfile
+
+# Media
+media/
+
+# Static files
+staticfiles/
+
+# Generated files
+*.tgz
+*.gz
+*.zip
+*.egg
+*.egg-info
+dist/
+build/
+
+# IDEs and editors
+*.sublime-workspace
+*.sublime-project
+
+# PyCharm
+*.iml
+
+# Visual Studio Code
+.history/
+
+# JetBrains
+*.idea
+.idea
+
+# Sphinx documentation
+docs/_build/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Python
+*.so
+*.dylib
+*.dll
+
+# MyPy
+.mypy_cache/
+
+# Pytest
+.cache/
+
+# Environments
+.env/
+env/
+ENV/
+
+# Celery
+celerybeat-schedule

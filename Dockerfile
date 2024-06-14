@@ -4,6 +4,12 @@ FROM python:3.9-slim
 # Set the working directory in the container
 WORKDIR /code
 
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    postgresql-client
+
 # Copy the current directory contents into the container at /code
 ADD . /code
 
