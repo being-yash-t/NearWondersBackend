@@ -18,12 +18,26 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'password', 'first_name', 'last_name')
 
     def create(self, validated_data):
+        username = validated_data.get('username')
+        password = validated_data.get('password')
+        first_name = validated_data.get('first_name')
+        last_name = validated_data.get('last_name')
+
+        if not username:
+            raise serializers.ValidationError({'username': 'Email is required.'})
+        if not password:
+            raise serializers.ValidationError({'password': 'Password is required.'})
+        if not first_name:
+            raise serializers.ValidationError({'first_name': 'First name is required.'})
+        if not last_name:
+            raise serializers.ValidationError({'last_name': 'Last name is required.'})
+
         user = User.objects.create_user(
-            username=validated_data['username'],
-            password=validated_data['password'],
-            email=validated_data['username'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
+            username=username,
+            password=password,
+            email=username,
+            first_name=first_name,
+            last_name=last_name
         )
         return user
 
@@ -61,12 +75,21 @@ class UserActivitySerializer(serializers.ModelSerializer):
         location_data = validated_data.pop('location')
         images_data = validated_data.pop('images')
 
+        if not location_data:
+            raise serializers.ValidationError({'location': 'Location is required.'})
+        location_name = location_data['name']
+        if not location_name:
+            raise serializers.ValidationError({'location/name': 'Location name is required.'})
+        activities = validated_data['activities']
+        if not activities:
+            raise serializers.ValidationError({'activities': 'activities is required.'})
+
         # Get the user from the context
         user = self.context['request'].user
 
         # Create or get the location
         location, created = Location.objects.get_or_create(
-            name=location_data['name'],
+            name=location_name,
             defaults={**location_data, 'created_by': user}
         )
 
