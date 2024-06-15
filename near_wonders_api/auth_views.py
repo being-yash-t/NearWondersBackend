@@ -2,38 +2,32 @@ from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from rest_framework.response import Response
-from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
+from .serializers import UserSerializer, RegisterUserSerializer, CustomTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'password')
-
-    def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            password=validated_data['password']
-        )
-        return user
+class LoginView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
-    serializer_class = UserSerializer
+    serializer_class = RegisterUserSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
+        user_serializer = UserSerializer(user)
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
-        })
+            'user': user_serializer.data,
+        }, status=status.HTTP_201_CREATED)
 
 
 class UserDeleteView(APIView):

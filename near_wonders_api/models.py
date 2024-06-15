@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -17,6 +18,7 @@ class Activity(models.TextChoices):
 
 
 class Location(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     activities = models.CharField(
@@ -34,7 +36,7 @@ class Location(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     created_by = models.ForeignKey(User, related_name='locations', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)  # To track the date of creation
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
@@ -45,6 +47,7 @@ class Location(models.Model):
 
 
 class Image(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     location = models.ForeignKey(Location, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='location_images/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
@@ -55,6 +58,7 @@ class Image(models.Model):
 
 
 class UserActivity(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, related_name='activities', on_delete=models.CASCADE)
     location = models.ForeignKey(Location, related_name='user_activities', on_delete=models.CASCADE)
     activities = models.CharField(max_length=255, choices=Activity.choices)

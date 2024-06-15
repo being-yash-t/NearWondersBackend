@@ -1,17 +1,52 @@
 from rest_framework import serializers
 from .models import Location, Image, UserActivity
+from django.contrib.auth.models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        serializer = UserSerializer(self.user)
+        data['user'] = serializer.data
+        return data
+
+
+class RegisterUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'password', 'first_name', 'last_name')
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+            email=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
+        )
+        return user
+
+
+class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='get_full_name')
+    user_since = serializers.DateTimeField(source='date_joined')
+
+    class Meta:
+        model = User
+        fields = ['id', 'full_name', 'email', 'user_since']
 
 
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
-        fields = ['name', 'description', 'activities', 'best_season', 'latitude', 'longitude']
+        fields = ['id', 'name', 'description', 'activities', 'best_season', 'latitude', 'longitude']
 
 
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ['image']
+        fields = ['id', 'image']
 
 
 class UserActivitySerializer(serializers.ModelSerializer):
@@ -20,7 +55,7 @@ class UserActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserActivity
-        fields = ['location', 'activities', 'user_notes', 'images']
+        fields = ['id', 'location', 'activities', 'user_notes', 'images']
 
     def create(self, validated_data):
         location_data = validated_data.pop('location')
