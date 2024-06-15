@@ -47,3 +47,21 @@ class UserActivitySerializer(serializers.ModelSerializer):
             user_activity.images.add(image)
 
         return user_activity
+
+
+class LocationSummarySerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='name')
+    date = serializers.DateTimeField(source='created_at')
+    images = serializers.SerializerMethodField()
+    activities = serializers.SerializerMethodField()
+    bookmarks = serializers.IntegerField(default=0)  # Assuming you want to count bookmarks, adapt as needed
+
+    class Meta:
+        model = Location
+        fields = ['id', 'title', 'date', 'images', 'bookmarks', 'activities', 'latitude', 'longitude']
+
+    def get_images(self, obj):
+        return [image.image.url for image in obj.preview_images]
+
+    def get_activities(self, obj):
+        return obj.activities.split(',')  # Assuming activities are stored as a comma-separated string

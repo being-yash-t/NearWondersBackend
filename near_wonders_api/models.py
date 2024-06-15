@@ -34,6 +34,7 @@ class Location(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     created_by = models.ForeignKey(User, related_name='locations', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)  # To track the date of creation
 
     def __str__(self):
         return self.name
