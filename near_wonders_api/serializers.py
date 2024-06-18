@@ -2,13 +2,22 @@ from rest_framework import serializers
 from .models import Location, Image, UserActivity
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import serializers
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
+
+        # Include the user data
         serializer = UserSerializer(self.user)
         data['user'] = serializer.data
+
+        # Include token expiration times
+        refresh = self.get_token(self.user)
+        data['refresh_expiration'] = refresh.access_token.lifetime.total_seconds()
+        data['access_expiration'] = refresh.lifetime.total_seconds()
+
         return data
 
 
@@ -51,10 +60,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'full_name', 'email', 'user_since']
 
 
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = ['id', 'name', 'description', 'activities', 'best_season', 'latitude', 'longitude']
+class LocationSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100)
+    latitude = serializers.FloatField()
+    longitude = serializers.FloatField()
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -63,8 +72,29 @@ class ImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
 
+class LocationField(serializers.Field):
+    def to_internal_value(self, data):
+        if 'id' in data:
+            try:
+                location = Location.objects.get(id=data['id'])
+                return location
+            except Location.DoesNotExist:
+                raise serializers.ValidationError('Location with this ID does not exist.')
+        else:
+            required_fields = ['name', 'latitude', 'longitude', 'description', 'best_season', 'activities']
+            for field in required_fields:
+                if field not in data:
+                    raise serializers.ValidationError({field: f'{field} is required.'})
+            return data
+
+    def to_representation(self, value):
+        if isinstance(value, Location):
+            return LocationSerializer(value).data
+        return value
+
+
 class UserActivitySerializer(serializers.ModelSerializer):
-    location = LocationSerializer()
+    location = LocationField()
     images = ImageSerializer(many=True)
 
     class Meta:
@@ -75,29 +105,29 @@ class UserActivitySerializer(serializers.ModelSerializer):
         location_data = validated_data.pop('location')
         images_data = validated_data.pop('images')
 
-        if not location_data:
-            raise serializers.ValidationError({'location': 'Location is required.'})
-        location_name = location_data['name']
-        if not location_name:
-            raise serializers.ValidationError({'location/name': 'Location name is required.'})
-        activities = validated_data['activities']
-        if not activities:
-            raise serializers.ValidationError({'activities': 'activities is required.'})
-
-        # Get the user from the context
         user = self.context['request'].user
 
-        # Create or get the location
-        location, created = Location.objects.get_or_create(
-            name=location_name,
-            defaults={**location_data, 'created_by': user}
-        )
+        if isinstance(location_data, Location):
+            location = location_data
+        else:
+            location_name = location_data['name']
+            activities = validated_data['activities']
+            if not location_name:
+                raise serializers.ValidationError({'location/name': 'Location name is required.'})
+            if not activities:
+                raise serializers.ValidationError({'activities': 'Activities are required.'})
+
+            location, created = Location.objects.get_or_create(
+                name=location_name,
+                defaults={**location_data, 'created_by': user}
+            )
 
         # Remove the user key from validated_data to avoid conflict
-        validated_data.pop('user', None)
+        user_activity_data = validated_data.copy()
+        user_activity_data.pop('user', None)
 
         # Create the user activity
-        user_activity = UserActivity.objects.create(location=location, user=user, **validated_data)
+        user_activity = UserActivity.objects.create(location=location, user=user, **user_activity_data)
 
         # Create and add images to the user activity
         for image_data in images_data:

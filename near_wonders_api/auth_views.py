@@ -6,6 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from .serializers import UserSerializer, RegisterUserSerializer, CustomTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.conf import settings
 
 
 class LoginView(TokenObtainPairView):
@@ -23,9 +24,15 @@ class UserRegistrationView(generics.CreateAPIView):
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
         user_serializer = UserSerializer(user)
+
+        access_expiration = settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds()
+        refresh_expiration = settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds()
+
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
+            'access_expiration': access_expiration,
+            'refresh_expiration': refresh_expiration,
             'user': user_serializer.data,
         }, status=status.HTTP_201_CREATED)
 
